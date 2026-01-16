@@ -1,0 +1,4 @@
+strictness: pedantic
+custom_prompts:
+  - "Do not allow usage of getattr; flag any usage and suggest alternatives."
+  - "Do not allow usage of isinstance; flag any usage and suggest alternatives."

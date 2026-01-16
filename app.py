@@ -51,3 +51,10 @@ users = []
 def add_user(name):
     global users
     users = users + [name]
+
+def reflection(obj, attr, value):
+    if isinstance(obj, dict):
+        obj[attr] = value
+        return obj.get(attr)
+    setattr(obj, attr, value)
+    return getattr(obj, attr)
