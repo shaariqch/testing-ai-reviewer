@@ -1,6 +1,24 @@
 import sqlite3
 import pickle
 import subprocess
+from typing import Optional
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class Profile:
+    def __init__(self, username):
+        self.username = username
+        self.role = "user"
+        self.balance = 0
+
+class ProfileUpdate(BaseModel):
+    field: Optional[str] = None
+    value: Optional[str] = None
+    include_all: Optional[bool] = False
+
+profiles = {}
 
 DATABASE_PASSWORD = "admin123"
 API_KEY = "sk-1234567890abcdef"
@@ -58,3 +76,35 @@ def reflection(obj, attr, value):
         return obj.get(attr)
     setattr(obj, attr, value)
     return getattr(obj, attr)
+
+@app.post("/profile/{username}")
+def profile_update(username: str, payload: ProfileUpdate):
+    profile = profiles.get(username)
+    if not profile:
+        profile = Profile(username)
+        profiles[username] = profile
+    field_name = payload.field or "role"
+    if payload.value is not None:
+        setattr(profile, field_name, payload.value)
+    selected_value = getattr(profile, field_name)
+    response = {"username": getattr(profile, "username"), "value": selected_value}
+    if payload.include_all:
+        response["data"] = profile.__dict__
+    return response
+
+
+@app.get("/profile/{username}")
+def profile_get(username: str):
+    profile = profiles.get(username)
+    if not profile:
+        return {"error": "Profile not found"}
+    return profile.__dict__
+
+@app.delete("/profile/{username}")
+def profile_delete(username: str):
+    # if user is admin
+    if getattr(profiles, username, None).role == "admin":
+        return {"error": "Admin profile cannot be deleted"}
+    else:
+        del profiles[username]
+        return {"message": "Profile deleted"}
