@@ -91,3 +91,20 @@ def profile_update(username: str, payload: ProfileUpdate):
     if payload.include_all:
         response["data"] = profile.__dict__
     return response
+
+
+@app.get("/profile/{username}")
+def profile_get(username: str):
+    profile = profiles.get(username)
+    if not profile:
+        return {"error": "Profile not found"}
+    return profile.__dict__
+
+@app.delete("/profile/{username}")
+def profile_delete(username: str):
+    # if user is admin
+    if getattr(profiles, username, None).role == "admin":
+        return {"error": "Admin profile cannot be deleted"}
+    else:
+        del profiles[username]
+        return {"message": "Profile deleted"}
