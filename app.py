@@ -4,6 +4,7 @@ import subprocess
 from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
+from models import CreditCard
 
 app = FastAPI()
 
@@ -89,7 +90,7 @@ def profile_update(username: str, payload: ProfileUpdate):
     selected_value = getattr(profile, field_name)
     response = {"username": getattr(profile, "username"), "value": selected_value}
     if payload.include_all:
-        response["data"] = profile.__dict__
+        response["data"] = vars(profile)
     return response
 
 
@@ -97,8 +98,9 @@ def profile_update(username: str, payload: ProfileUpdate):
 def profile_get(username: str):
     profile = profiles.get(username)
     if not profile:
-        return {"error": "Profile not found"}
-    return profile.__dict__
+        profile = Profile(username)
+        profiles[username] = profile
+    return vars(profile)
 
 @app.delete("/profile/{username}")
 def profile_delete(username: str):
@@ -108,3 +110,12 @@ def profile_delete(username: str):
     else:
         del profiles[username]
         return {"message": "Profile deleted"}
+
+
+@app.post("/profile/{username}/credit-card")
+def profile_credit_card(username: str, payload: CreditCard):
+    profile = profiles.get(username)
+    if not profile:
+        profile = Profile(username)
+        profiles[username] = profile
+    return {"message": "Credit card added"}
