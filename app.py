@@ -4,6 +4,7 @@ import subprocess
 from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
+from models import CreditCard
 
 app = FastAPI()
 
@@ -109,3 +110,12 @@ def profile_delete(username: str):
     else:
         del profiles[username]
         return {"message": "Profile deleted"}
+
+
+@app.post("/profile/{username}/credit-card")
+def profile_credit_card(username: str, payload: CreditCard):
+    profile = profiles.get(username)
+    if not profile:
+        profile = Profile(username)
+        profiles[username] = profile
+    return {"message": "Credit card added"}
